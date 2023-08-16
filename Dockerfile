@@ -10,10 +10,12 @@ WORKDIR /tmp
 
 # Fetch the nsfw_model and its requirements
 RUN wget https://github.com/GantMan/nsfw_model/releases/download/1.2.0/mobilenet_v2_140_224.1.zip \
-    && unzip ./mobilenet_v2_140_224.1.zip
+    && unzip ./mobilenet_v2_140_224.1.zip \
+    && git clone https://github.com/GantMan/nsfw_model.git
 
 # Fetch your project requirements
 COPY ./requirements.txt .
+RUN cat nsfw_model/requirements.txt >> requirements.txt
 
 # Build wheels for all requirements
 RUN pip wheel --no-cache-dir --wheel-dir /usr/src/app/wheels -r requirements.txt
@@ -25,6 +27,7 @@ WORKDIR /usr/src/flask_app
 
 # Copy the model from the builder stage
 COPY --from=builder /tmp/mobilenet_v2_140_224 /models/mobilenet_v2_140_224/
+COPY --from=builder /tmp/nsfw_model /usr/src/flask_app/nsfw_model
 
 # Copy requirements file and pre-built wheels from the builder
 COPY --from=builder /usr/src/app/wheels /wheels
