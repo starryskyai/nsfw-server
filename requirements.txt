@@ -2,11 +2,10 @@ flask
 gunicorn
 werkzeug
 uwsgi
-tensorflow==2.12.0
+tensorflow-cpu==2.12.0
 tensorflow-hub==0.12.0
 pillow
 numpy
 protobuf==3.20.*
 tensorflow_addons
 pyaml
-
