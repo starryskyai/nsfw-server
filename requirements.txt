@@ -2,4 +2,11 @@ flask
 gunicorn
 werkzeug
 uwsgi
-nsfw-detector
+tensorflow==2.12.0
+tensorflow-hub==0.12.0
+pillow
+numpy
+protobuf==3.20.*
+tensorflow_addons
+pyaml
+
