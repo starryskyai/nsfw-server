@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify, abort
-import logging
-from werkzeug.utils import secure_filename
 import os
+import logging
+from urllib.request import urlretrieve
+from flask import Flask, request, jsonify, abort
+from werkzeug.utils import secure_filename
 from nsfw_detector import predict
 from private_detector_inference import inference as pd_inference
 
@@ -29,6 +30,8 @@ server.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+from urllib.request import urlretrieve
+
 @server.route('/', methods=['GET', 'POST'])
 def inference():
     run_pd_inference = False  # Default is set to False
@@ -37,24 +40,39 @@ def inference():
         if request.method == 'GET':
             return 'The model is up and running. Send a POST request with a list of images.'
 
-        if 'files[]' not in request.files:
-            return jsonify(error="No files part"), 400
-
-        files = request.files.getlist('files[]')
-
-        if not files:
-            return jsonify(error="No files uploaded"), 400
-
         saved_filepaths = []
-        for file in files:
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
+
+        # Handle uploaded files
+        if 'files[]' in request.files:
+            files = request.files.getlist('files[]')
+            if not files:
+                return jsonify(error="No files uploaded"), 400
+
+            for file in files:
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    filepath = os.path.join(server.config['UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    saved_filepaths.append(filepath)
+
+        # Handle pre-signed URLs
+        elif 'urls[]' in request.json:
+            urls = request.json['urls[]']
+            if not urls:
+                return jsonify(error="No URLs provided"), 400
+
+            for i, url in enumerate(urls):
+                # Create a temporary filename based on URL index.
+                filename = f"temp_{i}.jpg"  # Assuming JPG, adjust if needed
                 filepath = os.path.join(server.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
+                urlretrieve(url, filepath)
                 saved_filepaths.append(filepath)
 
+        else:
+            return jsonify(error="Either provide files or URLs"), 400
+
         nsfw_detector_results = predict.classify(model, server.config['UPLOAD_FOLDER'])
-    
+
         private_detector_results = []
         if run_pd_inference:
             private_detector_results = pd_inference('/models/private_detector_with_frozen/private_detector 5/saved_model', saved_filepaths)
@@ -62,7 +80,7 @@ def inference():
         results = []
         for filepath in saved_filepaths:
             filename = os.path.basename(filepath)
-            
+
             nsfw_result = nsfw_detector_results.get(filepath, None)
             private_result = [res for res in private_detector_results if res["image_path"] == filepath][0] if private_detector_results else None
 
@@ -86,6 +104,7 @@ def inference():
     except Exception as e:
         # This will catch any exception and return its message.
         return jsonify(error=str(e)), 500
+
 
 
 @server.route('/health', methods=['GET'])

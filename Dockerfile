@@ -49,6 +49,4 @@ ENV PYTHONPATH="${PYTHONPATH}:/usr/src/flask_app/private-detector"
 
 EXPOSE 9090
 
-CMD ["uwsgi", "--http", "0.0.0.0:9090", "--module", "wsgi:server", "--processes", "1", "--threads", "2"]
-
-# CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:9090", "wsgi:server", "-t", "0"]
+CMD ["uwsgi", "--http", "0.0.0.0:9090", "--module", "wsgi:server", "--processes", "1", "--threads", "8", "--harakiri", "0"]

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Endpoint URL
-ENDPOINT="http://localhost:9090"  # replace 'your_flask_app_address' with your Flask app's actual address
+ENDPOINT="https://nsfw-server-gvx56wdn4a-an.a.run.app"  # replace 'your_flask_app_address' with your Flask app's actual address
 
 # Folder containing the files
-FOLDER_PATH="./test-images"  # replace this with your actual folder path
+FOLDER_PATH="./test-images/pack"  # replace this with your actual folder path
 
 # Construct the curl command with all the files
 CURL_CMD="curl -X POST"
