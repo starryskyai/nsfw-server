@@ -3,7 +3,7 @@ import logging
 from urllib.request import urlretrieve
 from flask import Flask, request, jsonify, abort
 from werkzeug.utils import secure_filename
-from nsfw_detector import predict
+from nsfw_detector_inference import classify
 from private_detector_inference import inference as pd_inference
 
 # Setup logging
@@ -62,8 +62,8 @@ def inference():
                 return jsonify(error="No URLs provided"), 400
 
             for i, url in enumerate(urls):
-                # Create a temporary filename based on URL index.
-                filename = f"temp_{i}.jpg"  # Assuming JPG, adjust if needed
+                unique_id = uuid.uuid4()
+                filename = f"temp_{unique_id}.jpg"
                 filepath = os.path.join(server.config['UPLOAD_FOLDER'], filename)
                 urlretrieve(url, filepath)
                 saved_filepaths.append(filepath)
@@ -71,7 +71,7 @@ def inference():
         else:
             return jsonify(error="Either provide files or URLs"), 400
 
-        nsfw_detector_results = predict.classify(model, server.config['UPLOAD_FOLDER'])
+        nsfw_detector_results = classify(model, server.config['UPLOAD_FOLDER'])
 
         private_detector_results = []
         if run_pd_inference:
