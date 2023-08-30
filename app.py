@@ -36,7 +36,7 @@ from urllib.request import urlretrieve
 
 @server.route('/', methods=['GET', 'POST'])
 def inference():
-    run_pd_inference = True
+    run_pd_inference = False  # Default is set to False
 
     try:
         if request.method == 'GET':
